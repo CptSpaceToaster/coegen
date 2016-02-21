@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'Coegen'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 CLI = 'coegen'
 MAIN = 'coegen.main:main'

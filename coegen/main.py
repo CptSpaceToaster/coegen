@@ -38,7 +38,7 @@ def main():
 
     """
     with open(outfile, 'w') as f:
-        f.write('MEMORY_INITIALIZATION_RADIX=2;\n')
+        f.write('MEMORY_INITIALIZATION_RADIX=16;\n')
         f.write('MEMORY_INITIALIZATION_VECTOR=')
         for row in I:
             f.write('\n')
