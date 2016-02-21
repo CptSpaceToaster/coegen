@@ -88,7 +88,7 @@ register: .register
 
 .PHONY: upload
 upload: .upload
-.upload: .build .register $(PYTHON) $(DOT_REQ) $(SOURCES) setup.py
+.upload: .register $(PYTHON) $(DOT_REQ) $(SOURCES) setup.py
 	$(PYTHON) setup.py sdist upload
 	$(PYTHON) setup.py bdist_wheel upload
 	touch .upload
