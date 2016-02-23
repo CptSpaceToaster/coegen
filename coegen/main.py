@@ -42,5 +42,5 @@ def main():
         f.write('MEMORY_INITIALIZATION_VECTOR=')
         for row in I:
             f.write('\n')
-            f.write(' '.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 4, args.format), pixel[0:3])), row)))
+            f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 4, args.format), pixel[0:3])), row)))
         f.write(';\n')
