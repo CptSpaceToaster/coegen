@@ -38,9 +38,20 @@ def main():
 
     """
     with open(outfile, 'w') as f:
-        f.write('MEMORY_INITIALIZATION_RADIX=16;\n')
+        if args.format in ['04b', '01x']:
+            f.write('MEMORY_INITIALIZATION_RADIX=16;\n')
+        elif args.format in ['01b']:
+            f.write('MEMORY_INITIALIZATION_RADIX=2;\n')
+        else:
+            print('Error: Format not recognized: {0}'.format(args.format))
+            sys.exit(1)
+
         f.write('MEMORY_INITIALIZATION_VECTOR=')
         for row in I:
             f.write('\n')
-            f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 4, args.format), pixel[0:3])), row)))
+            # Assume full alpha
+            if args.format in ['04b', '01x']:
+                f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 4, args.format), pixel[0:4])), row)))
+            elif args.format in ['01b']:
+                f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 7, args.format), pixel[0:4])), row)))
         f.write(';\n')
