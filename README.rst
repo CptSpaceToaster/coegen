@@ -4,14 +4,15 @@ coegen
 .. image:: https://img.shields.io/pypi/v/coegen.svg
     :target: https://pypi.python.org/pypi/coegen
 
-Convert an image into a .coe file
+Coegen converts an image into a .coe file using Pillow
 
 Installing coegen
 ==================
 
 Install from pip::
 
-    pip install coegen
+    sudo apt-get install libjpeg-dev
+    pip3 install coegen
 
 For development, clone from github and run the tests with::
 

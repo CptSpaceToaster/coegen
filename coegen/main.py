@@ -2,8 +2,8 @@ import coegen
 import argparse
 import os
 import sys
-import numpy
 from PIL import Image
+from collections import OrderedDict
 
 
 def main():
@@ -12,8 +12,6 @@ def main():
     parser.add_argument('FILE', help='Path to image file')
     parser.add_argument('-o', '--output', dest='output', default=None,
                         help='Output filename')
-    parser.add_argument('-f', '--format', dest='format', default='01x',
-                        help='Pixel format (default="01x"), try "04b"')
     parser.add_argument('-v', '--version', action='version', version=coegen.__version__)
     args = parser.parse_args()
 
@@ -27,7 +25,34 @@ def main():
         outfile = os.path.basename(args.FILE).split('.')[0] + '.coe'
 
     print('reading {0}'.format(args.FILE))
-    I = numpy.array(Image.open(args.FILE), dtype=numpy.uint8)
+    I = Image.open(args.FILE)
+    # Create a color LUT
+    LUT = OrderedDict()
+    # Count the number of unique colors, while creating a lookup table
+    colors = I.getcolors()
+    uniq = len(colors)
+    if uniq <= 0:
+        print('Error: no colors were detected. Please use images with colors?')
+        sys.exit(1)
+    if uniq > 0:
+        radix = 2
+        vformat = "01b"
+    if uniq > 2:
+        radix = 16
+        vformat = "01x"
+    if uniq > 16:
+        radix = 10
+        vformat = "08x"
+    if uniq > 4294967296:
+        print('Error: too many colors detected. Please use an image with less than 4294967296 (2^32) colors')
+        sys.exit(1)
+
+    uniq = 0
+    for _, color in reversed(colors):
+        LUT[color] = uniq
+        uniq += 1
+
+    print('selecting radix: {0}'.format(radix))
     print('writing {0}'.format(outfile))
 
     """
@@ -38,20 +63,21 @@ def main():
 
     """
     with open(outfile, 'w') as f:
-        if args.format in ['04b', '01x']:
-            f.write('MEMORY_INITIALIZATION_RADIX=16;\n')
-        elif args.format in ['01b']:
-            f.write('MEMORY_INITIALIZATION_RADIX=2;\n')
-        else:
-            print('Error: Format not recognized: {0}'.format(args.format))
-            sys.exit(1)
-
-        f.write('MEMORY_INITIALIZATION_VECTOR=')
-        for row in I:
-            f.write('\n')
-            # Assume full alpha
-            if args.format in ['04b', '01x']:
-                f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 4, args.format), pixel[0:4])), row)))
-            elif args.format in ['01b']:
-                f.write(''.join(map(lambda pixel: ''.join(map(lambda c: format(c >> 7, args.format), pixel[0:4])), row)))
+        f.write('MEMORY_INITIALIZATION_RADIX={0};\nMEMORY_INITIALIZATION_VECTOR='.format(radix))
+        idx = 0
+        for pixel in I.getdata():
+            if (idx % I.width == 0):
+                f.write('\n')
+            f.write(format(LUT[pixel], vformat))
+            idx += 1
+            if (radix == 10 and idx != I.width*I.height):
+                f.write(',')
         f.write(';\n')
+    print('complete')
+    print('------------')
+    print('colors used:')
+    for key, value in LUT.items():
+        print('  {value}: #{r}{g}{b}'.format(value=format(value, vformat),
+                                             r=format(key[0], '02x'),
+                                             g=format(key[1], '02x'),
+                                             b=format(key[2], '02x')))
